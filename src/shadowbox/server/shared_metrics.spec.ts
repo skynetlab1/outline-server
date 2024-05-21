@@ -92,11 +92,11 @@ describe('OutlineSharedMetricsPublisher', () => {
     describe('for server usage', () => {
       it('is sending correct reports', async () => {
         usageMetrics.countryUsage = [
-          {country: 'AA', inboundBytes: 11, tunnelTimeSec: 0},
-          {country: 'BB', inboundBytes: 11, tunnelTimeSec: 0},
-          {country: 'CC', inboundBytes: 22, tunnelTimeSec: 0},
-          {country: 'AA', inboundBytes: 33, tunnelTimeSec: 0},
-          {country: 'DD', inboundBytes: 33, tunnelTimeSec: 0},
+          {country: 'AA', inboundBytes: 11, tunnelTimeSec: 99},
+          {country: 'BB', inboundBytes: 11, tunnelTimeSec: 88},
+          {country: 'CC', inboundBytes: 22, tunnelTimeSec: 77},
+          {country: 'AA', inboundBytes: 33, tunnelTimeSec: 66},
+          {country: 'DD', inboundBytes: 33, tunnelTimeSec: 55},
         ];
         clock.nowMs += 60 * 60 * 1000;
 
@@ -107,41 +107,41 @@ describe('OutlineSharedMetricsPublisher', () => {
           startUtcMs: startTime,
           endUtcMs: clock.nowMs,
           userReports: [
-            {bytesTransferred: 11, tunnelTimeSec: 0, countries: ['AA']},
-            {bytesTransferred: 11, tunnelTimeSec: 0, countries: ['BB']},
-            {bytesTransferred: 22, tunnelTimeSec: 0, countries: ['CC']},
-            {bytesTransferred: 33, tunnelTimeSec: 0, countries: ['AA']},
-            {bytesTransferred: 33, tunnelTimeSec: 0, countries: ['DD']},
+            {bytesTransferred: 11, tunnelTimeSec: 99, countries: ['AA']},
+            {bytesTransferred: 11, tunnelTimeSec: 88, countries: ['BB']},
+            {bytesTransferred: 22, tunnelTimeSec: 77, countries: ['CC']},
+            {bytesTransferred: 33, tunnelTimeSec: 66, countries: ['AA']},
+            {bytesTransferred: 33, tunnelTimeSec: 55, countries: ['DD']},
           ],
         });
       });
 
       it('sends ASN data if present', async () => {
         usageMetrics.countryUsage = [
-          {country: 'DD', asn: 999, inboundBytes: 44, tunnelTimeSec: 0},
-          {country: 'EE', inboundBytes: 55, tunnelTimeSec: 0},
+          {country: 'DD', asn: 999, inboundBytes: 44, tunnelTimeSec: 11},
+          {country: 'EE', inboundBytes: 55, tunnelTimeSec: 22},
         ];
         clock.nowMs += 60 * 60 * 1000;
 
         await clock.runCallbacks();
 
         expect(metricsCollector.collectedServerUsageReport.userReports).toEqual([
-          {bytesTransferred: 44, tunnelTimeSec: 0, countries: ['DD'], asn: 999},
-          {bytesTransferred: 55, tunnelTimeSec: 0, countries: ['EE']},
+          {bytesTransferred: 44, tunnelTimeSec: 11, countries: ['DD'], asn: 999},
+          {bytesTransferred: 55, tunnelTimeSec: 22, countries: ['EE']},
         ]);
       });
 
       it('resets metrics to avoid double reporting', async () => {
         usageMetrics.countryUsage = [
-          {country: 'AA', inboundBytes: 11, tunnelTimeSec: 0},
-          {country: 'BB', inboundBytes: 11, tunnelTimeSec: 0},
+          {country: 'AA', inboundBytes: 11, tunnelTimeSec: 77},
+          {country: 'BB', inboundBytes: 11, tunnelTimeSec: 88},
         ];
         clock.nowMs += 60 * 60 * 1000;
         startTime = clock.nowMs;
         await clock.runCallbacks();
         usageMetrics.countryUsage = [
           ...usageMetrics.countryUsage,
-          {country: 'CC', inboundBytes: 22, tunnelTimeSec: 0},
+          {country: 'CC', inboundBytes: 22, tunnelTimeSec: 99},
           {country: 'DD', inboundBytes: 22, tunnelTimeSec: 0},
         ];
         clock.nowMs += 60 * 60 * 1000;
@@ -149,28 +149,28 @@ describe('OutlineSharedMetricsPublisher', () => {
         await clock.runCallbacks();
 
         expect(metricsCollector.collectedServerUsageReport.userReports).toEqual([
-          {bytesTransferred: 22, tunnelTimeSec: 0, countries: ['CC']},
+          {bytesTransferred: 22, tunnelTimeSec: 99, countries: ['CC']},
           {bytesTransferred: 22, tunnelTimeSec: 0, countries: ['DD']},
         ]);
       });
 
       it('ignores sanctioned countries', async () => {
         usageMetrics.countryUsage = [
-          {country: 'AA', inboundBytes: 11, tunnelTimeSec: 0},
-          {country: 'SY', inboundBytes: 11, tunnelTimeSec: 0},
-          {country: 'CC', inboundBytes: 22, tunnelTimeSec: 0},
-          {country: 'AA', inboundBytes: 33, tunnelTimeSec: 0},
-          {country: 'DD', inboundBytes: 33, tunnelTimeSec: 0},
+          {country: 'AA', inboundBytes: 11, tunnelTimeSec: 1},
+          {country: 'SY', inboundBytes: 11, tunnelTimeSec: 2},
+          {country: 'CC', inboundBytes: 22, tunnelTimeSec: 3},
+          {country: 'AA', inboundBytes: 33, tunnelTimeSec: 4},
+          {country: 'DD', inboundBytes: 33, tunnelTimeSec: 5},
         ];
         clock.nowMs += 60 * 60 * 1000;
 
         await clock.runCallbacks();
 
         expect(metricsCollector.collectedServerUsageReport.userReports).toEqual([
-          {bytesTransferred: 11, tunnelTimeSec: 0, countries: ['AA']},
-          {bytesTransferred: 22, tunnelTimeSec: 0, countries: ['CC']},
-          {bytesTransferred: 33, tunnelTimeSec: 0, countries: ['AA']},
-          {bytesTransferred: 33, tunnelTimeSec: 0, countries: ['DD']},
+          {bytesTransferred: 11, tunnelTimeSec: 1, countries: ['AA']},
+          {bytesTransferred: 22, tunnelTimeSec: 3, countries: ['CC']},
+          {bytesTransferred: 33, tunnelTimeSec: 4, countries: ['AA']},
+          {bytesTransferred: 33, tunnelTimeSec: 5, countries: ['DD']},
         ]);
       });
     });
