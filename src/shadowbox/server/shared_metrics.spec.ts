@@ -91,7 +91,7 @@ describe('OutlineSharedMetricsPublisher', () => {
 
     describe('for server usage', () => {
       it('is sending correct reports', async () => {
-        usageMetrics.countryUsage = [
+        usageMetrics.locationUsage = [
           {country: 'AA', inboundBytes: 11, tunnelTimeSec: 99},
           {country: 'BB', inboundBytes: 11, tunnelTimeSec: 88},
           {country: 'CC', inboundBytes: 22, tunnelTimeSec: 77},
@@ -117,7 +117,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
 
       it('sends ASN data if present', async () => {
-        usageMetrics.countryUsage = [
+        usageMetrics.locationUsage = [
           {country: 'DD', asn: 999, inboundBytes: 44, tunnelTimeSec: 11},
           {country: 'EE', inboundBytes: 55, tunnelTimeSec: 22},
         ];
@@ -132,15 +132,15 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
 
       it('resets metrics to avoid double reporting', async () => {
-        usageMetrics.countryUsage = [
+        usageMetrics.locationUsage = [
           {country: 'AA', inboundBytes: 11, tunnelTimeSec: 77},
           {country: 'BB', inboundBytes: 11, tunnelTimeSec: 88},
         ];
         clock.nowMs += 60 * 60 * 1000;
         startTime = clock.nowMs;
         await clock.runCallbacks();
-        usageMetrics.countryUsage = [
-          ...usageMetrics.countryUsage,
+        usageMetrics.locationUsage = [
+          ...usageMetrics.locationUsage,
           {country: 'CC', inboundBytes: 22, tunnelTimeSec: 99},
           {country: 'DD', inboundBytes: 22, tunnelTimeSec: 0},
         ];
@@ -155,7 +155,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
 
       it('ignores sanctioned countries', async () => {
-        usageMetrics.countryUsage = [
+        usageMetrics.locationUsage = [
           {country: 'AA', inboundBytes: 11, tunnelTimeSec: 1},
           {country: 'SY', inboundBytes: 11, tunnelTimeSec: 2},
           {country: 'CC', inboundBytes: 22, tunnelTimeSec: 3},
@@ -301,14 +301,14 @@ class FakeMetricsCollector implements MetricsCollectorClient {
 }
 
 class ManualUsageMetrics implements UsageMetrics {
-  public countryUsage = [] as LocationUsage[];
+  public locationUsage = [] as LocationUsage[];
 
   getLocationUsage(): Promise<LocationUsage[]> {
-    return Promise.resolve(this.countryUsage);
+    return Promise.resolve(this.locationUsage);
   }
 
   reset() {
-    this.countryUsage = [] as LocationUsage[];
+    this.locationUsage = [] as LocationUsage[];
   }
 }
 
