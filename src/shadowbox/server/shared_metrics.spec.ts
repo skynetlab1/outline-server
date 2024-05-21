@@ -29,7 +29,9 @@ import {
   OutlineSharedMetricsPublisher,
   SharedMetricsPublisher,
   UsageMetrics,
+  PrometheusUsageMetrics,
 } from './shared_metrics';
+import {FakePrometheusClient} from './mocks/mocks';
 
 describe('OutlineSharedMetricsPublisher', () => {
   let clock: ManualClock;
@@ -220,6 +222,23 @@ describe('OutlineSharedMetricsPublisher', () => {
 
     expect(metricsCollector.collectServerUsageMetrics).not.toHaveBeenCalled();
     expect(metricsCollector.collectFeatureMetrics).not.toHaveBeenCalled();
+  });
+});
+
+describe('PrometheusUsageMetrics', () => {
+  it('returns a list of location usage', async () => {
+    const publisher = new PrometheusUsageMetrics(new FakePrometheusClient({a: 123, b: 456}));
+
+    expect(await publisher.getLocationUsage()).toEqual([
+      {country: '', inboundBytes: 123, asn: undefined},
+      {country: '', inboundBytes: 456, asn: undefined},
+    ]);
+  });
+
+  it('returns an empty list when there is no location usage', async () => {
+    const publisher = new PrometheusUsageMetrics(new FakePrometheusClient({}));
+
+    expect(await publisher.getLocationUsage()).toEqual([]);
   });
 });
 
