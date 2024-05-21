@@ -261,7 +261,6 @@ describe('PrometheusUsageMetrics', () => {
         },
       ],
     };
-
     prometheusClient.query.and.returnValues(
       Promise.resolve(mockDataBytesResponse),
       Promise.resolve(mockTunnelTimeResponse)

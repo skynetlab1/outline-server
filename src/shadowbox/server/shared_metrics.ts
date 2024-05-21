@@ -94,7 +94,7 @@ export class PrometheusUsageMetrics implements UsageMetrics {
 
   constructor(private prometheusClient: PrometheusClient) {}
 
-  private async query(metric: string, deltaSecs: number): Promise<PrometheusQueryResult> {
+  private async queryUsage(metric: string, deltaSecs: number): Promise<PrometheusQueryResult> {
     const query = `
       sum(increase(${metric}[${deltaSecs}s]))
       by (${PROMETHEUS_COUNTRY_LABEL}, ${PROMETHEUS_ASN_LABEL})
@@ -115,8 +115,8 @@ export class PrometheusUsageMetrics implements UsageMetrics {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
     const [dataBytesResult, tunnelTimeResult] = await Promise.all([
       // We measure the traffic to and from the target, since that's what we are protecting.
-      this.query('shadowsocks_data_bytes_per_location{dir=~"p>t|p<t"}', timeDeltaSecs),
-      this.query('shadowsocks_tunnel_time_seconds_per_location', timeDeltaSecs),
+      this.queryUsage('shadowsocks_data_bytes_per_location{dir=~"p>t|p<t"}', timeDeltaSecs),
+      this.queryUsage('shadowsocks_tunnel_time_seconds_per_location', timeDeltaSecs),
     ]);
 
     // We join the bytes and tunneltime metrics together by location (i.e. country and ASN).
