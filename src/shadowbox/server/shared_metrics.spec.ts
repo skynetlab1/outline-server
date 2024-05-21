@@ -32,6 +32,7 @@ import {
   PrometheusUsageMetrics,
 } from './shared_metrics';
 import {FakePrometheusClient} from './mocks/mocks';
+import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 
 describe('OutlineSharedMetricsPublisher', () => {
   let clock: ManualClock;
@@ -226,17 +227,46 @@ describe('OutlineSharedMetricsPublisher', () => {
 });
 
 describe('PrometheusUsageMetrics', () => {
-  it('returns a list of location usage', async () => {
-    const publisher = new PrometheusUsageMetrics(new FakePrometheusClient({a: 123, b: 456}));
+  let prometheusClient: jasmine.SpyObj<PrometheusClient>;
+  let publisher: PrometheusUsageMetrics;
 
-    expect(await publisher.getLocationUsage()).toEqual([
-      {country: '', inboundBytes: 123, asn: undefined},
-      {country: '', inboundBytes: 456, asn: undefined},
+  beforeEach(() => {
+    prometheusClient = jasmine.createSpyObj('PrometheusClient', ['query']);
+    publisher = new PrometheusUsageMetrics(prometheusClient);
+  });
+
+  it('returns a list of location usage', async () => {
+    prometheusClient.query.and.returnValue(
+      Promise.resolve({
+        resultType: 'vector',
+        result: [
+          {
+            metric: {location: 'US', asn: '15169'},
+            value: [Date.now() / 1000, '123'],
+          },
+          {
+            metric: {location: 'NL'},
+            value: [Date.now() / 1000, '456'],
+          },
+        ],
+      })
+    );
+
+    const observedUsage = await publisher.getLocationUsage();
+
+    expect(observedUsage).toEqual([
+      {country: 'US', inboundBytes: 123, asn: 15169},
+      {country: 'NL', inboundBytes: 456, asn: undefined},
     ]);
   });
 
   it('returns an empty list when there is no location usage', async () => {
-    const publisher = new PrometheusUsageMetrics(new FakePrometheusClient({}));
+    prometheusClient.query.and.returnValue(
+      Promise.resolve({
+        resultType: 'vector',
+        result: [],
+      })
+    );
 
     expect(await publisher.getLocationUsage()).toEqual([]);
   });
