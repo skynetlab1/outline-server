@@ -2,7 +2,7 @@
   "name": "outline-server",
   "private": true,
   "dependencies": {
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.0",
