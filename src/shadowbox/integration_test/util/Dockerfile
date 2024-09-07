@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.19.1
+FROM alpine:3.19.4
 RUN apk add --no-cache jq
 ENTRYPOINT [ "sh" ]
